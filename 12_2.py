@@ -141,14 +141,14 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
             i += 1
         if i >= len(group_sizes):
             return arr_count
-        min_len = sum(group_sizes[:i]) + i - 1
+        min_len = max(0, sum(group_sizes[:i]) + i - 1)
         if min_len+1 > row[0][1]:
             return arr_count
         for j in range(min(row[0][1]-min_len, group_sizes[i]-row[1][1]+1)):
-            free_ud_count = row[0][1] - min_len - 1 - j
+            free_ud_count = max(0, row[0][1] - min_len - 1 - j)
             arr_count += (
                     comb(i+free_ud_count, free_ud_count)
-                    * count_arrangements(row[2:], [group_sizes[i]-row[1][1]-j] + group_sizes[i+1:])
+                    * count_arrangements(row[1:], [group_sizes[i]-j] + group_sizes[i+1:])
             )
         i += 1
 
