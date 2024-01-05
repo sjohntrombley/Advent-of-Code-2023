@@ -1,19 +1,23 @@
 from itertools import groupby
 from math import comb
 
-#with open('12_input.txt') as f:
-#    rows = []
-#    for line in f:
-#        row, group_sizes = line.split(' ')
-#        rows.append((row, [int(s) for s in group_sizes.split(',')]))
-rows = [
-    ('???.###', [1, 1, 3]),
-    ('.??..??...?##.', [1, 1, 3]),
-    ('?#?#?#?#?#?#?#?', [1, 3, 1, 6]),
-    ('????.#...#...', [4, 1, 1]),
-    ('????.######..#####.', [1, 6, 5]),
-    ('?###????????', [3, 2, 1]),
-]
+with open('12_input.txt') as f:
+    rows = []
+    for line in f:
+        row, group_sizes = line.split(' ')
+        rows.append((row, [int(s) for s in group_sizes.split(',')]))
+#rows = [
+#    ('???.###', [1, 1, 3]),
+#    ('.??..??...?##.', [1, 1, 3]),
+#    ('?#?#?#?#?#?#?#?', [1, 3, 1, 6]),
+#    ('????.#...#...', [4, 1, 1]),
+#    ('????.######..#####.', [1, 6, 5]),
+#    ('?###????????', [3, 2, 1]),
+#]
+with open('12_1_arrangement_counts.txt') as f:
+    arr_counts = [int(s) for s in f]
+if len(rows) != len(arr_counts):
+    raise "no matcherino"
 
 def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
     # trivial case for convenience
@@ -74,7 +78,7 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
                     # impossible
                     if len(row)>2 and row[2][0] == '#':
                         return 0
-                    del row[:2]
+                    del row[:3]
                     group_sizes.pop(0)
                     break
                 # if the series of damaged springs plus the following series of unknown springs at the start of the row
@@ -93,7 +97,7 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
         return 1
     # Handle the case where the series of unknown springs is the entire row
     if len(row) == 1:
-        groups_min = sum(group_sizes) + len(group_sizes) - 1
+        groups_min = max(0, sum(group_sizes) + len(group_sizes) - 1)
         # if we cannot fit the groups into the unknown series, there are no possible arrangements.
         if groups_min > row[0][1]:
             return 0
@@ -106,9 +110,9 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
         arr_count = 0
         while min_len <= row[0][1]:
             free_uds_count = row[0][1] - min_len
-            arr_count += comb(i+free_uds_count, free_uds_count) * count_arrangements(row[1:], group_sizes[i:])
+            arr_count += comb(i+free_uds_count, free_uds_count) * count_arrangements(row[2:], group_sizes[i:])
             i += 1
-            if i >= len(group_sizes):
+            if i > len(group_sizes):
                 break
             min_len = sum(group_sizes[:i]) + i - 1
         return arr_count
@@ -124,8 +128,11 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
             # we've run out of groups large enough for the series of damaged springs
             if i >= len(group_sizes):
                 return arr_count
-            adjusted_uk_size = max(0, row[0][1] + row[1][1] - group_sizes[i] - 1)
-            min_len = max(0, sum(group_sizes[:i]) + i - 1)
+            adjusted_uk_size = row[0][1] + row[1][1] - group_sizes[i]
+            min_len = sum(group_sizes[:i]) + i
+            if i > 0:
+                min_len -= 1
+                adjusted_uk_size -= 1
             if min_len > adjusted_uk_size:
                 return arr_count
             free_ud_count = adjusted_uk_size - min_len
@@ -141,11 +148,17 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
             i += 1
         if i >= len(group_sizes):
             return arr_count
-        min_len = max(0, sum(group_sizes[:i]) + i - 1)
+        min_len = max(0, sum(group_sizes[:i]) + i - 1)  # do the if statement thing
         if min_len+1 > row[0][1]:
             return arr_count
-        for j in range(min(row[0][1]-min_len, group_sizes[i]-row[1][1]+1)):
-            free_ud_count = max(0, row[0][1] - min_len - 1 - j)
+        j_ub = row[0][1] - min_len
+        if i == 0:
+            j_ub += 1
+        j_ub = min(j_ub, group_sizes[i]-row[1][1]+1)
+        for j in range(j_ub):
+            free_ud_count = row[0][1] - min_len - j
+            if i > 0:
+                free_ud_count -= 1
             arr_count += (
                     comb(i+free_ud_count, free_ud_count)
                     * count_arrangements(row[1:], [group_sizes[i]-j] + group_sizes[i+1:])
@@ -154,9 +167,11 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
 
 
 ans = 0
-for row, group_sizes in rows:
+for i, ((row, group_sizes), expected_arr_count) in enumerate(zip(rows, arr_counts)):
     row = [(k, sum(1 for _ in g)) for k, g in groupby(row)]
-    ans += count_arrangements(row, group_sizes)
+    arr_count = count_arrangements(row, group_sizes)
+    ans += arr_count
+
 print(ans)
 
 
