@@ -5,14 +5,6 @@ with open('12_input.txt') as f:
     for line in f:
         row, group_sizes = line.split(' ')
         rows.append((row, [int(s) for s in group_sizes.split(',')]))
-#rows = [
-#    ('???.###', [1, 1, 3]),
-#    ('.??..??...?##.', [1, 1, 3]),
-#    ('?#?#?#?#?#?#?#?', [1, 3, 1, 6]),
-#    ('????.#...#...', [4, 1, 1]),
-#    ('????.######..#####.', [1, 6, 5]),
-#    ('?###????????', [3, 2, 1]),
-#]
 
 possible_count = 0
 for row, group_sizes in rows:
