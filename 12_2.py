@@ -1,23 +1,7 @@
 from itertools import groupby
 from math import comb
+from concurrent.futures import ProcessPoolExecutor
 
-with open('12_input.txt') as f:
-    rows = []
-    for line in f:
-        row, group_sizes = line.split(' ')
-        rows.append(('?'.join([row]*5), [int(s) for s in group_sizes.split(',')]*5))
-#rows = [
-#    ('???.###????.###????.###????.###????.###', [1, 1, 3]*5),
-#    ('.??..??...?##.?.??..??...?##.?.??..??...?##.?.??..??...?##.?.??..??...?##.', [1, 1, 3]*5),
-#    ('?#?#?#?#?#?#?#???#?#?#?#?#?#?#???#?#?#?#?#?#?#???#?#?#?#?#?#?#???#?#?#?#?#?#?#?', [1, 3, 1, 6]*5),
-#    ('????.#...#...?????.#...#...?????.#...#...?????.#...#...?????.#...#...', [4, 1, 1]*5),
-#    ('????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.', [1, 6, 5]*5),
-#    ('?###??????????###??????????###??????????###??????????###????????', [3, 2, 1]*5),
-#]
-with open('12_1_arrangement_counts.txt') as f:
-    arr_counts = [int(s) for s in f]
-#if len(rows) != len(arr_counts):
-#    raise "no matcherino"
 
 def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
     # trivial case for convenience
@@ -166,13 +150,19 @@ def count_arrangements(row: list[tuple[str, int]], group_sizes: list[int]):
         i += 1
 
 
-ans = 0
-for i, ((row, group_sizes), expected_arr_count) in enumerate(zip(rows, arr_counts)):
-    row = [(k, sum(1 for _ in g)) for k, g in groupby(row)]
-    arr_count = count_arrangements(row, group_sizes)
-    ans += arr_count
-    print(i)
-print()
-print(ans)
+def caw(x):
+    row = [(k, sum(1 for _ in g)) for k, g in groupby(x[0])]
+    return count_arrangements(row, x[1])
+
+
+if __name__ == '__main__':
+    with open('12_input.txt') as f:
+        rows = []
+        for line in f:
+            row, group_sizes = line.split(' ')
+            rows.append(('?'.join([row] * 5), [int(s) for s in group_sizes.split(',')] * 5))
+
+    e = ProcessPoolExecutor()
+    print(sum(e.map(caw, rows, chunksize=10)))
 
 
