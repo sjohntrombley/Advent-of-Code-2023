@@ -46,20 +46,21 @@ def solve(dig_plan):
             while r >= max(r1, 0):
                 dig_map[r][c] = loop_dir
                 r -= 1
-            while r1 < 0:
-                dig_map.insert(0, [0]*c + [loop_dir] + [0]*(map_width-c-1))
-                map_height += 1
-                r1 += 1
-            r = r1
+            if r1 < 0:
+                dig_map = [[0]*c + [loop_dir] + [0]*(map_width-c-1) for _ in range(-r1)] + dig_map
+                map_height -= r1
+                r = 0
+            else:
+                r = r1
         elif direction == 2:
             r1 = r + length
             while r < min(r1+1, map_height):
                 dig_map[r][c] = -loop_dir
                 r += 1
             # replace with an extend
-            while r1 >= map_height:
-                dig_map.append([0]*c + [-loop_dir] + [0]*(map_width-c-1))
-                map_height += 1
+            if r1 >= map_height:
+                dig_map.extend([0]*c + [-loop_dir] + [0]*(map_width-c-1) for _ in range(r1-map_height+1))
+                map_height = r1+1
             r = r1
         elif direction == 1:
             c1 = c + length
